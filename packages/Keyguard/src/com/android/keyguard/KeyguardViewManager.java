@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2007 The Android Open Source Project
+ * This code has been modified. Portions copyright (C) 2013, ParanoidAndroid Project.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -114,8 +115,16 @@ public class KeyguardViewManager {
                     Settings.System.LOCKSCREEN_NOTIFICATIONS), false, this);
         }
 
+        void observe() {
+            ContentResolver resolver = mContext.getContentResolver();
+            resolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.LOCKSCREEN_SEE_THROUGH), false, this);
+        }
+
+
         @Override
         public void onChange(boolean selfChange) {
+            setKeyguardParams();
             updateSettings();
             mViewManager.updateViewLayout(mKeyguardHost, mWindowLayoutParams);
         }
@@ -181,6 +190,41 @@ public class KeyguardViewManager {
         mKeyguardHost.setVisibility(View.VISIBLE);
         mKeyguardView.show();
         mKeyguardView.requestFocus();
+    }
+
+    public void setKeyguardParams() {
+        boolean enableScreenRotation = shouldEnableScreenRotation();
+
+        int flags = WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
+                    | WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR
+                    | WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN;
+
+            if (!isSeeThroughEnabled()) {
+                flags |= WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER;
+            }
+
+            if (!mNeedsInput) {
+                flags |= WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM;
+            }
+
+            final int stretch = ViewGroup.LayoutParams.MATCH_PARENT;
+            final int type = WindowManager.LayoutParams.TYPE_KEYGUARD;
+            WindowManager.LayoutParams lp = new WindowManager.LayoutParams(
+                    stretch, stretch, type, flags, PixelFormat.TRANSLUCENT);
+            lp.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE;
+            lp.windowAnimations = R.style.Animation_LockScreen;
+            lp.screenOrientation = enableScreenRotation ?
+                    ActivityInfo.SCREEN_ORIENTATION_USER : ActivityInfo.SCREEN_ORIENTATION_NOSENSOR;
+
+            if (ActivityManager.isHighEndGfx()) {
+                lp.flags |= WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED;
+                lp.privateFlags |=
+                        WindowManager.LayoutParams.PRIVATE_FLAG_FORCE_HARDWARE_ACCELERATED;
+            }
+            lp.privateFlags |= WindowManager.LayoutParams.PRIVATE_FLAG_SET_NEEDS_MENU_KEY;
+            lp.inputFeatures |= WindowManager.LayoutParams.INPUT_FEATURE_DISABLE_USER_ACTIVITY;
+            lp.setTitle("Keyguard");
+            mWindowLayoutParams = lp;
     }
 
     private boolean shouldEnableScreenRotation() {
@@ -436,14 +480,23 @@ public class KeyguardViewManager {
         mViewManager.updateViewLayout(mKeyguardHost, mWindowLayoutParams);
     }
 
-    void updateShowWallpaper(boolean show) {
-        if (show) {
-            mWindowLayoutParams.flags |= WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER;
-        } else {
-            mWindowLayoutParams.flags &= ~WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER;
-        }
+    private boolean isSeeThroughEnabled() {
+        return Settings.System.getInt(mContext.getContentResolver(),
+                Settings.System.LOCKSCREEN_SEE_THROUGH, 0) == 1;
+    }
 
-        mViewManager.updateViewLayout(mKeyguardHost, mWindowLayoutParams);
+    void updateShowWallpaper(boolean show) {
+        if (isSeeThroughEnabled()) {
+            return;
+        } else {
+            if (show) {
+                mWindowLayoutParams.flags |= WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER;
+            } else {
+                mWindowLayoutParams.flags &= ~WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER;
+            }
+
+            mViewManager.updateViewLayout(mKeyguardHost, mWindowLayoutParams);
+        }
     }
 
     public void setNeedsInput(boolean needsInput) {

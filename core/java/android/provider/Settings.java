@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2006 The Android Open Source Project
+ * This code has been modified. Portions copyright (C) 2013, ParanoidAndroid Project.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -3476,6 +3477,12 @@ public final class Settings {
          * @hide
          */
         public static final String SOFT_BACK_KILL_APP_ENABLE = "soft_back_kill_app_enable";
+
+        /**
+         * Allows to show the background activity back the lockscreen
+         * @hide
+         */
+        public static final String LOCKSCREEN_SEE_THROUGH = "lockscreen_see_through";
 
         /**
          * Enable statusbar double tap gesture on to put device to sleep
