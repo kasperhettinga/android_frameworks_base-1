@@ -1815,4 +1815,6 @@
   <java-symbol type="string" name="privacy_guard_notification_detail" />
   <java-symbol type="drawable" name="stat_notify_privacy_guard" />
 
+  <!-- UI theme mode -->
+  <java-symbol type="integer" name="config_uiThemeMode" />
 </resources>
