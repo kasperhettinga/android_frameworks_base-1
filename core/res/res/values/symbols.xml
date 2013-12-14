@@ -1828,4 +1828,7 @@
   <java-symbol type="bool" name="config_hasRotationLockSwitch" />
   <java-symbol type="string" name="toast_rotation_unlocked" />
   <java-symbol type="string" name="toast_rotation_locked" />
+
+  <!-- UI theme mode -->
+  <java-symbol type="integer" name="config_uiThemeMode" />
 </resources>
